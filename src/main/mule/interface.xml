@@ -258,13 +258,12 @@ output application/json
 output application/json
 ---
 {
-  message: "User added (but not really)"
+  message: "Hospital added"
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
     </flow>
     <flow name="post:\users:application\json:corona-api-config">
-        <logger level="INFO" doc:name="Logger" doc:id="91e28d5e-e913-4c32-a9d7-5338b97799c4" message='"que pasa"'/>
 		<flow-ref doc:name="postUser" doc:id="87228e19-10ad-4f78-897d-d3686e6e0082" name="postUser" />
     </flow>
 </mule>

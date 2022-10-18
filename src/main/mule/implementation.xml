@@ -15,7 +15,7 @@ http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/fil
 	</file:config>
 	<flow name="getUsers" doc:id="f35eacb4-071f-4e8e-93e2-db614e2a634f" >
 		<db:select doc:name="Select" doc:id="cfb9fd98-17ad-4257-8e45-95573e3023ef" config-ref="Database_Config" >
-			<db:sql ><![CDATA[SELECT * FROM person]]></db:sql>
+			<db:sql ><![CDATA[SELECT * FROM persons]]></db:sql>
 		</db:select>
 		<ee:transform doc:name="Transform Message" doc:id="53a4158a-57d7-4d0e-b45b-17a71b4efb2c" >
 			<ee:message >
@@ -69,13 +69,12 @@ html: {
 		<set-payload value="#[payload]" doc:name="Payload" doc:id="d92a135b-e7a1-4cd0-91c3-a6c1f436fbea" mimeType="text/html" />
 	</flow>
 	<flow name="postUser" doc:id="b5150e54-fa4b-48a5-b78b-c49cfb46b4eb" >
-		<logger level="INFO" doc:name="Logger" doc:id="377b62d7-a059-4c08-99bd-2d4b5fe6d2e3" message="#[payload]"/>
 		<choice doc:name="Choice" doc:id="c585b764-9da7-4b24-bd19-44f10315ded0" >
 			<when expression='#[payload.citizenship=="Serbia"]'>
 				<flow-ref doc:name="IsSerbian" doc:id="70211d49-10ce-4ae2-b758-107f3f9abee8" name="IsSerbian"/>
 			</when>
-			<otherwise >
-				<logger level="INFO" doc:name="Logger" doc:id="d9457b6e-aad3-4ac7-bc09-9a2da0323377" message='#["sadasdasd"]'/>
+			<otherwise>
+				<set-payload value='#[output application/json&#10;---&#10;{&#10;	"error":"No ha sido añadido, no es ciudadano de Serbia"&#10;	&#10;}]' doc:name="Set Payload" doc:id="2adc963a-5bc7-408c-b72c-73c8c45f26f5" />
 			</otherwise>
 		</choice>
 	</flow>
@@ -89,23 +88,76 @@ html: {
 				<set-variable value="14" doc:name="Set Variable 14" doc:id="c3b80fac-bb4f-42fa-8590-dbd0a3cf39e8" variableName="days_left" />
 			</otherwise>
 		</choice>
-		<db:insert config-ref="Database_Config">
-    <db:sql><![CDATA[INSERT INTO person(id, name, surname, citizenship, stateFrom, symptoms, days_left, id_hospital)
-VALUES (:id, :name, :surname, :citizenship, :stateFrom, :symptoms, :days_left, :id_hospital)
-    ]]></db:sql>
-			<db:input-parameters ><![CDATA[#[output application/json
+		<flow-ref doc:name="Flow Reference" doc:id="2c8e014b-48c7-4505-92ca-0e3247786aaf" name="hasSymptoms"/>
+		<ee:transform doc:name="Transform Message" doc:id="4207fe49-514b-42f9-a8d6-c9056d80d013" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
 ---
 {
-	"id": payload.id,
-	"name": payload.name,
-	"surname": payload.surname,
-	"citizenship": payload.citizenship,
-	"stateFrom": payload.stateFrom,
-	"symptoms": payload.symptoms,
+	"message": "User added"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="hasSymptoms" doc:id="53c132ce-287a-43b5-b08f-40ba3e2b3d3c" >
+		<set-variable value="#[payload]" doc:name="previousPayload" doc:id="9014df6b-e33a-41a1-8ac6-c8d5d293ecc6" variableName="previousPayload"/>
+		<choice doc:name="Choice" doc:id="a1f44f43-7128-4896-a2ca-b81b1d248324" >
+			<when expression='#[payload.symptoms == "yes"]' >
+				<db:select doc:name="Select" doc:id="c3051ce6-528e-450a-aec8-a63462e0653c" config-ref="Database_Config">
+					<db:sql ><![CDATA[SELECT * FROM hospital]]></db:sql>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="8b0619c7-a436-4370-a032-55c45f1cbc28" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="hospitalName" ><![CDATA[%dw 2.0
+output application/json
+
+var empty = (payload map $ filter $.status=="empty")[0].name
+var slightly = (payload map $ filter $.status=="slightly")[0].name
+var partially = (payload map $ filter $.status=="partially")[0].name
+var almostFull = (payload map $ filter $.status=="almostFull")[0].name
+
+---
+
+if (isEmpty(empty))
+    if (isEmpty(slightly))
+       if (isEmpty(partially))
+            if (isEmpty(almostFull)) 
+                {"message":"No existe ningún hospital disponible"}
+            else
+                almostFull
+        else
+            partially
+    else
+        slightly
+else
+    empty]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<db:insert config-ref="Database_Config">
+    <db:sql><![CDATA[INSERT INTO persons (id, name, surname, citizenship, stateFrom, symptoms, days_left, id_hospital)
+VALUES (:id, :name, :surname, :citizenship, :stateFrom, :symptoms, :days_left, :id_hospital)
+    ]]></db:sql>
+			<db:input-parameters><![CDATA[#[output application/json
+---
+{
+	"id": vars.previousPayload.id,
+	"name": vars.previousPayload.name,
+	"surname": vars.previousPayload.surname,
+	"citizenship": vars.previousPayload.citizenship,
+	"stateFrom": vars.previousPayload.stateFrom,
+	"symptoms": vars.previousPayload.symptoms,
 	"days_left": vars.days_left,
-	"id_hospital" : payload.id_hospital
+	"id_hospital" : vars.hospitalName
 }]]]></db:input-parameters>
 
 </db:insert>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="65b6f39a-a766-487f-a092-c7d48d69ccbd" message="No se mete en el hospital"/>
+			</otherwise>
+		</choice>
 	</sub-flow>
 </mule>
