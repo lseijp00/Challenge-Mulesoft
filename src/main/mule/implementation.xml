@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="80381d53-cf5d-4551-85b5-717641e2274e" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="b69171cd-9f60-49f1-9d65-7758b03378d3" >
+		<file:connection workingDir="C:\Users\lseijas\AnypointStudio\studio-workspace\challenge-devoteam\src\main\resources" />
+	</file:config>
+	<flow name="getUsers" doc:id="f35eacb4-071f-4e8e-93e2-db614e2a634f" >
+		<db:select doc:name="Select" doc:id="cfb9fd98-17ad-4257-8e45-95573e3023ef" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT * FROM person]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="53a4158a-57d7-4d0e-b45b-17a71b4efb2c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+html: {
+	head: {
+		title: 'Corona API',
+		link @(href: "https://fonts.googleapis.com", rel: "preconnect"): "",
+		link @(href: "https://fonts.gstatic.com", rel: "preconnect"): "",
+		link @(href: "https://fonts.googleapis.com/css2?family=Open+Sans:wght@500;600;700&display=swap", rel: "stylesheet", asd: "text/css"): "",
+	},
+	body @(style: "display:flex; flex-direction:column; min-height:100vh; margin: auto; background-color: #1e1e1e; font-family : Open Sans"): {
+		h1 @(style: "background-color: #1F75FE; font-weight: 700; padding: 1rem 2rem; font-size:40px; color:white; text-align: center; margin-bottom: 3rem"): "RECORDS LIST",
+		div @(style: "display:flex; width:85%; flex-wrap: wrap; flex-direction: row; margin:auto; margin-bottom: 3rem; justify-content:center; align-items:center; color: white; gap:1.6rem"): {
+			div @(style: "display:flex; flex-direction: column; margin-auto; align-items:center; gap: .7rem"): payload map {
+		   		h2: $.name ++ " " ++ $.surname,
+		   		div @(style: "display: flex; flex-direction: column; background-color: white; color: black; font-size:12px; padding: 1rem 2rem; border-radius: 20px; min-width:270px;-webkit-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); -moz-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); box-shadow: 11px 11px 28px -17px rgba(255,255,255,1)"): {
+		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+		   				p @(style:"display: flex; width:60%"): "JMBG",
+		   				p @(style: "font-weight: 700"): $.id
+		   			},
+		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+		   				p: "Citizenship",
+		   				p @(style: "font-weight: 700"): $.citizenship
+		   			},
+		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+		   				p: "State coming from",
+		   				p @(style: "font-weight: 700"): $.stateFrom
+		   			},
+		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+		   				p: "Has he/she symptoms?",
+		   				p @(style: "font-weight: 700"): upper($.symptoms)
+		   			},
+		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+		   				p: "Days left isolation",
+		   				p @(style: "font-weight: 700"): $.days_left
+		   			},
+		   			div @(style:"display:flex; justify-content: space-between;padding-left: .5rem; padding-right: .5rem"): {
+		   				p: "Hospital name",
+		   				p @(style: "font-weight: 700"): if ($.id_hospital == null) "X" else $.id_hospital
+		   			}	 	   			
+		   		}
+			}
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-payload value="#[payload]" doc:name="Payload" doc:id="d92a135b-e7a1-4cd0-91c3-a6c1f436fbea" mimeType="text/html" />
+	</flow>
+	<flow name="postUser" doc:id="b5150e54-fa4b-48a5-b78b-c49cfb46b4eb" >
+		<logger level="INFO" doc:name="Logger" doc:id="377b62d7-a059-4c08-99bd-2d4b5fe6d2e3" message="#[payload]"/>
+		<choice doc:name="Choice" doc:id="c585b764-9da7-4b24-bd19-44f10315ded0" >
+			<when expression='#[payload.citizenship=="Serbia"]'>
+				<flow-ref doc:name="IsSerbian" doc:id="70211d49-10ce-4ae2-b758-107f3f9abee8" name="IsSerbian"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="d9457b6e-aad3-4ac7-bc09-9a2da0323377" message='#["sadasdasd"]'/>
+			</otherwise>
+		</choice>
+	</flow>
+	<sub-flow name="IsSerbian" doc:id="b070b3d6-abd7-4551-a962-f2dc210369b6" >
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://Hotspots.json", "application/json")]' doc:name="Set Variable" doc:id="b061a35f-38c6-41cf-b764-c11501b086a2" variableName="fileData"/>
+		<choice doc:name="Choice" doc:id="6745bfac-ea8c-46ea-9d7d-1c0ecb4b8ad2" >
+			<when expression='#[(vars.fileData.hotspots filter ((item, index) -&gt; item contains payload.stateFrom))[0] == payload.stateFrom]'>
+				<set-variable doc:name="Set Variable 28" doc:id="9e0fbb93-9b3a-447a-bb4b-fbc931dbf310" variableName="days_left" value="28"/>
+			</when>
+			<otherwise >
+				<set-variable value="14" doc:name="Set Variable 14" doc:id="c3b80fac-bb4f-42fa-8590-dbd0a3cf39e8" variableName="days_left" />
+			</otherwise>
+		</choice>
+		<db:insert config-ref="Database_Config">
+    <db:sql><![CDATA[INSERT INTO person(id, name, surname, citizenship, stateFrom, symptoms, days_left, id_hospital)
+VALUES (:id, :name, :surname, :citizenship, :stateFrom, :symptoms, :days_left, :id_hospital)
+    ]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/json
+---
+{
+	"id": payload.id,
+	"name": payload.name,
+	"surname": payload.surname,
+	"citizenship": payload.citizenship,
+	"stateFrom": payload.stateFrom,
+	"symptoms": payload.symptoms,
+	"days_left": vars.days_left,
+	"id_hospital" : payload.id_hospital
+}]]]></db:input-parameters>
+
+</db:insert>
+	</sub-flow>
+</mule>
