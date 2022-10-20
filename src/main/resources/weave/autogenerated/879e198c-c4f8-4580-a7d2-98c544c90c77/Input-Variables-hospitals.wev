@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_879e198c_c4f8_4580_a7d2_98c544c90c77_Input_Variables_hospitals = Array<{|  id?: Number,   name?: String,   status?: String|}>
+

@@ -189,23 +189,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="get:\hospitals:corona-api-config">
-        <ee:transform>
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-[
-  {
-    id: 6,
-    status: "full"
-  }, 
-  {
-    id: 4,
-    status: "empty"
-  }
-]]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="73b8bb09-215e-456c-ad96-b6abd0b039bd" name="getHospitals"/>
     </flow>
     <flow name="get:\users:corona-api-config">
         <flow-ref doc:name="Get Users" doc:id="543eae8d-da7a-48d8-89a6-48327bc873c2" name="getUsers" />

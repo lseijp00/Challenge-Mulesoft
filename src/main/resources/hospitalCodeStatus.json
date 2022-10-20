@@ -1,0 +1,7 @@
+{
+	"full" : 4,
+	"almostFull": 3,
+	"partially": 2,
+	"slightly": 1,
+	"empty": 0
+}

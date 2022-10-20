@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
 	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="80381d53-cf5d-4551-85b5-717641e2274e" >
 		<http:request-connection host="localhost" port="8081" />
 	</http:request-config>
@@ -22,6 +23,7 @@ http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/fil
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/xml
 ---
+
 html: {
 	head: {
 		title: 'Corona API',
@@ -29,12 +31,18 @@ html: {
 		link @(href: "https://fonts.gstatic.com", rel: "preconnect"): "",
 		link @(href: "https://fonts.googleapis.com/css2?family=Open+Sans:wght@500;600;700&display=swap", rel: "stylesheet", asd: "text/css"): "",
 	},
-	body @(style: "display:flex; flex-direction:column; min-height:100vh; margin: auto; background-color: #1e1e1e; font-family : Open Sans"): {
-		h1 @(style: "background-color: #1F75FE; font-weight: 700; padding: 1rem 2rem; font-size:40px; color:white; text-align: center; margin-bottom: 3rem"): "RECORDS LIST",
-		div @(style: "display:flex; width:85%; flex-wrap: wrap; flex-direction: row; margin:auto; margin-bottom: 3rem; justify-content:center; align-items:center; color: white; gap:1.6rem"): {
+	body @(style: "display:flex; min-height:100vh; margin: auto; background-color: #1e1e1e; font-family : Open Sans"): {
+		div @(style: "display: flex; flex-direction: column; max-height:350px; gap:3rem; justify-content:center; width: 20%; border-bottom-right-radius: 20px; align-items:center; background-color: #D4DCFF; color: white; padding: 1rem"):{
+			h1 @(style: " font-weight: 700; padding: 1rem 2rem; font-size:40px; color:black; text-align: center; margin-bottom: 3rem; margin-block-start: 0em; margin-block-end: 0em;"): "USERS LIST",
+			div @(style: "display: flex; flex-direction:column; text-align:center; gap: 2rem; color: white"): {
+				a @(href:"http://localhost:8081/hospitals", style:"text-decoration:none; font-size: 18px; text-transform: uppercase; color:black"): "Go to hospitals",
+				a @(href:"http://localhost:8081/history", style:"text-decoration:none; font-size: 18px; text-transform: uppercase; color:black"): "Go to history",				
+			}
+		},
+		div @(style: "display:flex; width:70%; flex-wrap: wrap; flex-direction: row; margin:auto; margin-bottom: 3rem; margin-top: 10rem; justify-content:center; align-items:center; color: white; gap:2.6rem"): {
 			div @(style: "display:flex; flex-direction: column; margin-auto; align-items:center; gap: .7rem"): payload map {
 		   		h2: $.name ++ " " ++ $.surname,
-		   		div @(style: "display: flex; flex-direction: column; background-color: white; color: black; font-size:12px; padding: 1rem 2rem; border-radius: 20px; min-width:270px;-webkit-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); -moz-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); box-shadow: 11px 11px 28px -17px rgba(255,255,255,1)"): {
+		   		div @(style: "display: flex; flex-direction: column; background-color: white; color: black; font-size:12px; padding: .7rem .7rem; border-radius: 20px; min-width:270px;-webkit-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); -moz-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); margin-bottom:1rem"): {
 		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
 		   				p @(style:"display: flex; width:60%"): "JMBG",
 		   				p @(style: "font-weight: 700"): $.id
@@ -48,17 +56,19 @@ html: {
 		   				p @(style: "font-weight: 700"): $.stateFrom
 		   			},
 		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
-		   				p: "Has he/she symptoms?",
-		   				p @(style: "font-weight: 700"): upper($.symptoms)
-		   			},
-		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
 		   				p: "Days left isolation",
 		   				p @(style: "font-weight: 700"): $.days_left
 		   			},
+		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+		   				p: "Has he/she symptoms?",
+		   				p @(style: "font-weight: 700"): upper($.symptoms)
+		   			},
+		   			
 		   			div @(style:"display:flex; justify-content: space-between;padding-left: .5rem; padding-right: .5rem"): {
 		   				p: "Hospital name",
 		   				p @(style: "font-weight: 700"): if ($.id_hospital == null) "X" else $.id_hospital
-		   			}	 	   			
+		   			},
+		   				 	   			
 		   		}
 			}
 		}
@@ -77,6 +87,17 @@ html: {
 				<set-payload value='#[output application/json&#10;---&#10;{&#10;	"error":"No ha sido añadido, no es ciudadano de Serbia"&#10;	&#10;}]' doc:name="Set Payload" doc:id="2adc963a-5bc7-408c-b72c-73c8c45f26f5" />
 			</otherwise>
 		</choice>
+		<flow-ref doc:name="assignHospital" doc:id="2c8e014b-48c7-4505-92ca-0e3247786aaf" name="assignHospital" />
+		<ee:transform doc:name="Transform Message" doc:id="4207fe49-514b-42f9-a8d6-c9056d80d013">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "User added"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 	<sub-flow name="IsSerbian" doc:id="b070b3d6-abd7-4551-a962-f2dc210369b6" >
 		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://Hotspots.json", "application/json")]' doc:name="Set Variable" doc:id="b061a35f-38c6-41cf-b764-c11501b086a2" variableName="fileData"/>
@@ -88,46 +109,34 @@ html: {
 				<set-variable value="14" doc:name="Set Variable 14" doc:id="c3b80fac-bb4f-42fa-8590-dbd0a3cf39e8" variableName="days_left" />
 			</otherwise>
 		</choice>
-		<flow-ref doc:name="Flow Reference" doc:id="2c8e014b-48c7-4505-92ca-0e3247786aaf" name="hasSymptoms"/>
-		<ee:transform doc:name="Transform Message" doc:id="4207fe49-514b-42f9-a8d6-c9056d80d013" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-	"message": "User added"
-}]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
 	</sub-flow>
-	<sub-flow name="hasSymptoms" doc:id="53c132ce-287a-43b5-b08f-40ba3e2b3d3c" >
-		<set-variable value="#[payload]" doc:name="previousPayload" doc:id="9014df6b-e33a-41a1-8ac6-c8d5d293ecc6" variableName="previousPayload"/>
+	<sub-flow name="assignHospital" doc:id="53c132ce-287a-43b5-b08f-40ba3e2b3d3c" >
 		<choice doc:name="Choice" doc:id="a1f44f43-7128-4896-a2ca-b81b1d248324" >
 			<when expression='#[payload.symptoms == "yes"]' >
-				<db:select doc:name="Select" doc:id="c3051ce6-528e-450a-aec8-a63462e0653c" config-ref="Database_Config">
-					<db:sql ><![CDATA[SELECT * FROM hospital]]></db:sql>
+				<db:select doc:name="Select" doc:id="c3051ce6-528e-450a-aec8-a63462e0653c" config-ref="Database_Config" target="hospitals">
+					<db:sql><![CDATA[SELECT * FROM hospital]]></db:sql>
 				</db:select>
-				<ee:transform doc:name="Transform Message" doc:id="8b0619c7-a436-4370-a032-55c45f1cbc28" >
-					<ee:message >
+				<ee:transform doc:name="Transform Message" doc:id="8b0619c7-a436-4370-a032-55c45f1cbc28">
+					<ee:message>
 					</ee:message>
-					<ee:variables >
-						<ee:set-variable variableName="hospitalName" ><![CDATA[%dw 2.0
+					<ee:variables>
+						<ee:set-variable variableName="hospitalName"><![CDATA[%dw 2.0
 output application/json
 
-var empty = (payload map $ filter $.status=="empty")[0].name
-var slightly = (payload map $ filter $.status=="slightly")[0].name
-var partially = (payload map $ filter $.status=="partially")[0].name
-var almostFull = (payload map $ filter $.status=="almostFull")[0].name
+var empty = (vars.hospitals map $ filter $.status=="empty")[0].name
+var slightly = (vars.hospitals map $ filter $.status=="slightly")[0].name
+var partially = (vars.hospitals map $ filter $.status=="partially")[0].name
+var almostFull = (vars.hospitals map $ filter $.status=="almostFull")[0].name
 
 ---
 
 if (isEmpty(empty))
     if (isEmpty(slightly))
        if (isEmpty(partially))
-            if (isEmpty(almostFull)) 
-                {"message":"No existe ningún hospital disponible"}
-            else
-                almostFull
+             if(isEmpty(almostFull))
+             	null
+             else
+                 almostFull
         else
             partially
     else
@@ -136,28 +145,104 @@ else
     empty]]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
+				<try doc:name="Try" doc:id="3dc8304b-77c5-411c-b536-810c25a6e900" >
+					<validation:is-not-null doc:name="Is not null" doc:id="ddb9642d-5775-4986-a043-4fbabfbbf6fe" value="#[vars.hospitalName]" message="There is no available hospitals." />
+					<error-handler >
+						<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6726562e-3376-45c2-9e89-1a3e1c7b06a3" type="VALIDATION:NULL">
+							<set-payload value="#[error.description]" doc:name="Set Payload" doc:id="0bcf4ea8-a662-4bbf-bf2f-8ee810685cee" />
+						</on-error-propagate>
+					</error-handler>
+				</try>
 				<db:insert config-ref="Database_Config">
     <db:sql><![CDATA[INSERT INTO persons (id, name, surname, citizenship, stateFrom, symptoms, days_left, id_hospital)
-VALUES (:id, :name, :surname, :citizenship, :stateFrom, :symptoms, :days_left, :id_hospital)
+VALUES (:id, :name, :surname, :citizenship, :stateFrom, :symptoms, :days_left, :id_hospital);
+
     ]]></db:sql>
 			<db:input-parameters><![CDATA[#[output application/json
 ---
 {
-	"id": vars.previousPayload.id,
-	"name": vars.previousPayload.name,
-	"surname": vars.previousPayload.surname,
-	"citizenship": vars.previousPayload.citizenship,
-	"stateFrom": vars.previousPayload.stateFrom,
-	"symptoms": vars.previousPayload.symptoms,
+	"id": payload.id,
+	"name": payload.name,
+	"surname": payload.surname,
+	"citizenship": payload.citizenship,
+	"stateFrom": payload.stateFrom,
+	"symptoms": payload.symptoms,
 	"days_left": vars.days_left,
 	"id_hospital" : vars.hospitalName
 }]]]></db:input-parameters>
 
 </db:insert>
+				<flow-ref doc:name="manageHospital" doc:id="89d41bf0-3ebe-4148-84ad-a789a3417bd9" name="manageHospital" />
 			</when>
 			<otherwise>
-				<logger level="INFO" doc:name="Logger" doc:id="65b6f39a-a766-487f-a092-c7d48d69ccbd" message="No se mete en el hospital"/>
+				<logger level="INFO" doc:name="Logger" doc:id="65b6f39a-a766-487f-a092-c7d48d69ccbd" message="User not inserted in hospital cause has no symptoms."/>
 			</otherwise>
 		</choice>
 	</sub-flow>
+	<sub-flow name="manageHospital" doc:id="879e198c-c4f8-4580-a7d2-98c544c90c77" >
+		<db:update doc:name="Update" doc:id="7faa4a8f-898d-4672-b10a-177fc61f785a" config-ref="Database_Config">
+			<db:sql ><![CDATA[UPDATE hospital
+SET status = :status, currentPatients= currentPatients+1
+WHERE name = :name;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/json
+var targetHospital = (vars.hospitals filter ((item, index) -> item.name == vars.hospitalName))[0]
+
+---
+{
+	"status": if (targetHospital.status=="empty") "slightly" 
+		else if (targetHospital.status=="slightly") "partially" 
+		else if (targetHospital.status=="partially") "almostFull" 
+		else "full",
+	"name": vars.hospitalName,
+}]]]></db:input-parameters>
+		</db:update>
+	</sub-flow>
+	<flow name="getHospitals" doc:id="f4cb5e00-d294-48ed-b76c-7bb354fc63de" >
+		<db:select doc:name="Select" doc:id="3d2801da-5c38-46c9-a3c2-6ff60b29e2f2" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT * FROM hospital]]></db:sql>
+		</db:select>
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://colors.json", "application/json")]' doc:name="Set Variable" doc:id="972de3ed-b826-4511-a7fd-96c41e3b6375" variableName="colorsData"/>
+		<ee:transform doc:name="Transform Message" doc:id="d58497a2-9317-43fb-b9cb-efb7089b9a98" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+html: {
+	head: {
+		title: 'Corona API',
+		link @(href: "https://fonts.googleapis.com", rel: "preconnect"): "",
+		link @(href: "https://fonts.gstatic.com", rel: "preconnect"): "",
+		link @(href: "https://fonts.googleapis.com/css2?family=Open+Sans:wght@500;600;700&display=swap", rel: "stylesheet", asd: "text/css"): "",
+	},
+	body @(style: "display:flex; min-height:100vh; margin: auto; background-color: #1e1e1e; font-family : Open Sans"): {
+		div @(style: "display: flex; flex-direction: column; max-height:350px; gap:3rem; justify-content:center; width: 20%; border-bottom-right-radius: 20px; align-items:center; background-color: #D4DCFF; color: white; padding: 1rem"):{
+			h1 @(style: " font-weight: 700; padding: 1rem 2rem; font-size:40px; color:black; text-align: center; margin-bottom: 3rem; margin-block-start: 0em; margin-block-end: 0em;"): "HOSPITALS",
+			div @(style: "display: flex; flex-direction:column; text-align:center; gap: 2rem; color: white"): {
+				a @(href:"http://localhost:8081/users", style:"text-decoration:none; font-size: 18px; text-transform: uppercase; color:black"): "Go to users",
+				a @(href:"http://localhost:8081/history", style:"text-decoration:none; font-size: 18px; text-transform: uppercase; color:black"): "Go to history",				
+			}
+		},
+		div @(style:"display:flex; flex-direction:column; gap: 4rem; justify-content:center; align-items:center; width:70%; margin:auto; margin-top:5rem"):{
+			div @(style: "display:flex; gap:2.5rem; justify-content:center; align-items:center; color: white" ): vars.colorsData mapObject ((value, key, index) -> {
+		        div @(style:"display:flex; justify-content:_center; align-items: center; gap:.5rem"):{
+			        img @(src:"https://raw.githubusercontent.com/lseijp00/Challenge-Mulesoft/main/" ++ key ++".svg", style: "width:40px"):"",
+			        p:value
+		        }
+	    	}),
+			div @(style: "display:flex; flex-wrap: wrap; margin:auto; justify-content:center; align-items:center; color: white; gap:6rem"): {
+				div @(style: "display:flex; flex-direction: column; margin-auto; align-items:center; gap: .7rem"): payload map {
+					p @(style: "margin-bottom:2.5rem; font-size:22px; font-weight:600"): $.name,
+					div @(style: "display: flex; gap: 2rem; align-items: end; justify-content: center"): {
+				   		img @(src: "https://raw.githubusercontent.com/lseijp00/Challenge-Mulesoft/952dd380984dd09b55586fdd7d30c60db17ee5f3/hospital.svg", style:"display:flex; width: 130px"): "",
+						img @(src: "https://raw.githubusercontent.com/lseijp00/Challenge-Mulesoft/main/" ++ payload.status[$$] ++ ".svg", style:"display:flex; width: 80px; height: auto"): ""	
+					}
+				}
+			}
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-payload value="#[payload]" doc:name="Payload" doc:id="9891869b-6da6-43df-9842-ca57aa2cce6e" mimeType="text/html" />
+	</flow>
 </mule>
