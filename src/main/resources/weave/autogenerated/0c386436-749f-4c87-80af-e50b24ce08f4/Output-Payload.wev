@@ -1,0 +1,14 @@
+%dw 2.0
+
+type auto_0c386436_749f_4c87_80af_e50b24ce08f4_Output_Payload = {
+  symptoms: String, 
+  days_left: Number, 
+  surname: String, 
+  citizenship: String, 
+  id_hospital: String, 
+  name: String, 
+  id: String, 
+  stateFrom: String, 
+  _?: Any
+}
+

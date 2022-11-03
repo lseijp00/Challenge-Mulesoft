@@ -2,6 +2,9 @@
   "sampleData": {
     "53a4158a-57d7-4d0e-b45b-17a71b4efb2c": {
       "payload": "sample_data/list_java.dwl"
+    },
+    "a835fd1d-7ba7-45e8-8fbb-a5e285cd7ece": {
+      "payload": "sample_data/name.xml"
     }
   }
 }

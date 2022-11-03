@@ -1,23 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:file="http://www.mulesoft.org/schema/mule/file"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
-http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
 	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="80381d53-cf5d-4551-85b5-717641e2274e" >
 		<http:request-connection host="localhost" port="8081" />
 	</http:request-config>
 	<file:config name="File_Config" doc:name="File Config" doc:id="b69171cd-9f60-49f1-9d65-7758b03378d3" >
 		<file:connection workingDir="C:\Users\lseijas\AnypointStudio\studio-workspace\challenge-devoteam\src\main\resources" />
 	</file:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="062ec92a-75b9-4945-82de-e6578cd83973" >
+		<email:smtp-connection host="smtp.gmail.com" port="587" user="luisseijas998@gmail.com" password="cdlosfncdiwerqet" >
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
 	<flow name="getUsers" doc:id="f35eacb4-071f-4e8e-93e2-db614e2a634f" >
-		<db:select doc:name="Select" doc:id="cfb9fd98-17ad-4257-8e45-95573e3023ef" config-ref="Database_Config" >
-			<db:sql ><![CDATA[SELECT * FROM persons]]></db:sql>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="77114274-5bb9-4db4-9e4e-92848aac35b4" >
+			<route >
+				<db:select doc:name="Select Users in hospitals" doc:id="cfb9fd98-17ad-4257-8e45-95573e3023ef" config-ref="Database_Config" target="usersHospitals">
+			<db:sql><![CDATA[SELECT * FROM persons WHERE symptoms="yes"]]></db:sql>
 		</db:select>
+			</route>
+			<route >
+				<db:select doc:name="Select Users at home" doc:id="b1572e66-3cc2-4422-839d-82f7d26c3cbc" config-ref="Database_Config" target="usersHome">
+					<db:sql><![CDATA[SELECT * FROM persons WHERE symptoms="no"]]></db:sql>
+				</db:select>
+			</route>
+		</scatter-gather>
 		<ee:transform doc:name="Transform Message" doc:id="53a4158a-57d7-4d0e-b45b-17a71b4efb2c" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -39,172 +57,95 @@ html: {
 				a @(href:"http://localhost:8081/history", style:"text-decoration:none; font-size: 18px; text-transform: uppercase; color:black"): "Go to history",				
 			}
 		},
-		div @(style: "display:flex; width:70%; flex-wrap: wrap; flex-direction: row; margin:auto; margin-bottom: 3rem; margin-top: 10rem; justify-content:center; align-items:center; color: white; gap:2.6rem"): {
-			div @(style: "display:flex; flex-direction: column; margin-auto; align-items:center; gap: .7rem"): payload map {
-		   		h2: $.name ++ " " ++ $.surname,
-		   		div @(style: "display: flex; flex-direction: column; background-color: white; color: black; font-size:12px; padding: .7rem .7rem; border-radius: 20px; min-width:270px;-webkit-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); -moz-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); margin-bottom:1rem"): {
-		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
-		   				p @(style:"display: flex; width:60%"): "JMBG",
-		   				p @(style: "font-weight: 700"): $.id
-		   			},
-		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
-		   				p: "Citizenship",
-		   				p @(style: "font-weight: 700"): $.citizenship
-		   			},
-		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
-		   				p: "State coming from",
-		   				p @(style: "font-weight: 700"): $.stateFrom
-		   			},
-		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
-		   				p: "Days left isolation",
-		   				p @(style: "font-weight: 700"): $.days_left
-		   			},
-		   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
-		   				p: "Has he/she symptoms?",
-		   				p @(style: "font-weight: 700"): upper($.symptoms)
-		   			},
-		   			
-		   			div @(style:"display:flex; justify-content: space-between;padding-left: .5rem; padding-right: .5rem"): {
-		   				p: "Hospital name",
-		   				p @(style: "font-weight: 700"): if ($.id_hospital == null) "X" else $.id_hospital
-		   			},
-		   				 	   			
-		   		}
+		div @(style: "display:flex; width:70%; flex-direction: column; margin:auto; margin-bottom: 3rem; margin-top: 3rem; color: white; gap:3.6rem"): {
+			div @(style: "display:flex; flex-direction:column; justify-content:center; align-items:center"):{
+				
+				h1 @(style:"background:tomato; padding: 1rem 2rem; border-radius:5px"): "Users at home",
+				div @(style: "display:flex; flex-wrap:wrap;gap:2.6rem"):{
+					div @(style: "display:flex; flex-direction:column; margin-auto; align-items:center; gap: .7rem"): vars.usersHome map {
+				   		h2: $.name ++ " " ++ $.surname,
+				   		div @(style: "display: flex; flex-direction: column; background-color: white; color: black; font-size:12px; padding: .7rem .7rem; border-radius: 20px; min-width:270px;-webkit-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); -moz-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); margin-bottom:1rem"): {
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p @(style:"display: flex; width:60%"): "JMBG",
+				   				p @(style: "font-weight: 700"): $.id
+				   			},
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "Citizenship",
+				   				p @(style: "font-weight: 700"): $.citizenship
+				   			},
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "State coming from",
+				   				p @(style: "font-weight: 700"): $.stateFrom
+				   			},
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "Days left isolation",
+				   				p @(style: "font-weight: 700"): $.days_left
+				   			},
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "Has he/she symptoms?",
+				   				p @(style: "font-weight: 700"): upper($.symptoms)
+				   			},
+				   			
+				   			div @(style:"display:flex; justify-content: space-between;padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "Hospital name",
+				   				p @(style: "font-weight: 700"): if ($.id_hospital == null) "X" else $.id_hospital
+				   			},
+				   				 	   			
+				   		}
+					}
+				}
+			},
+			div @(style: "display:flex; flex-direction:column; justify-content:center; align-items:center"):{
+				h1 @(style:"background:tomato; padding: 1rem 2rem; border-radius:5px"): "Users at hospitals",
+				div @(style: "display:flex; flex-wrap:wrap; gap:2.6rem"):{
+					div @(style: "display:flex; flex-direction:column; margin-auto; align-items:center; gap: .7rem"): vars.usersHospitals map {
+				   		h2: $.name ++ " " ++ $.surname,
+				   		div @(style: "display: flex; flex-direction: column; background-color: white; color: black; font-size:12px; padding: .7rem .7rem; border-radius: 20px; min-width:270px;-webkit-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); -moz-box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); box-shadow: 11px 11px 28px -17px rgba(255,255,255,1); margin-bottom:1rem"): {
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p @(style:"display: flex; width:60%"): "JMBG",
+				   				p @(style: "font-weight: 700"): $.id
+				   			},
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "Citizenship",
+				   				p @(style: "font-weight: 700"): $.citizenship
+				   			},
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "State coming from",
+				   				p @(style: "font-weight: 700"): $.stateFrom
+				   			},
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "Days left isolation",
+				   				p @(style: "font-weight: 700"): $.days_left
+				   			},
+				   			div @(style:"display:flex; justify-content: space-between; border-bottom: 1px solid black; padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "Has he/she symptoms?",
+				   				p @(style: "font-weight: 700"): upper($.symptoms)
+				   			},
+				   			
+				   			div @(style:"display:flex; justify-content: space-between;padding-left: .5rem; padding-right: .5rem"): {
+				   				p: "Hospital name",
+				   				p @(style: "font-weight: 700"): if ($.id_hospital == null) "X" else $.id_hospital
+				   			},
+				   				 	   			
+				   		}
+					}
+				}
 			}
 		}
 	}
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<set-payload value="#[payload]" doc:name="Payload" doc:id="d92a135b-e7a1-4cd0-91c3-a6c1f436fbea" mimeType="text/html" />
+		<flow-ref doc:name="ConvertToHTML" doc:id="029e1b0b-aed4-4369-bb9b-973a9e65d92b" name="ConvertToHTML" />
 	</flow>
-	<flow name="postUser" doc:id="b5150e54-fa4b-48a5-b78b-c49cfb46b4eb" >
-		<choice doc:name="Choice" doc:id="c585b764-9da7-4b24-bd19-44f10315ded0" >
-			<when expression='#[payload.citizenship=="Serbia"]'>
-				<flow-ref doc:name="IsSerbian" doc:id="70211d49-10ce-4ae2-b758-107f3f9abee8" name="IsSerbian"/>
-			</when>
-			<otherwise>
-				<set-payload value='#[output application/json&#10;---&#10;{&#10;	"error":"No ha sido añadido, no es ciudadano de Serbia"&#10;	&#10;}]' doc:name="Set Payload" doc:id="2adc963a-5bc7-408c-b72c-73c8c45f26f5" />
-			</otherwise>
-		</choice>
-		<flow-ref doc:name="assignHospital" doc:id="2c8e014b-48c7-4505-92ca-0e3247786aaf" name="assignHospital" />
-		<ee:transform doc:name="Transform Message" doc:id="4207fe49-514b-42f9-a8d6-c9056d80d013">
+	<flow name="getHospitals" doc:id="f4cb5e00-d294-48ed-b76c-7bb354fc63de">
+		<db:select doc:name="Select" doc:id="3d2801da-5c38-46c9-a3c2-6ff60b29e2f2" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM hospital]]></db:sql>
+		</db:select>
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://colors.json", "application/json")]' doc:name="Set Variable" doc:id="972de3ed-b826-4511-a7fd-96c41e3b6375" variableName="colorsData" />
+		<ee:transform doc:name="Transform Message" doc:id="d58497a2-9317-43fb-b9cb-efb7089b9a98">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-	"message": "User added"
-}]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-	</flow>
-	<sub-flow name="IsSerbian" doc:id="b070b3d6-abd7-4551-a962-f2dc210369b6" >
-		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://Hotspots.json", "application/json")]' doc:name="Set Variable" doc:id="b061a35f-38c6-41cf-b764-c11501b086a2" variableName="fileData"/>
-		<choice doc:name="Choice" doc:id="6745bfac-ea8c-46ea-9d7d-1c0ecb4b8ad2" >
-			<when expression='#[(vars.fileData.hotspots filter ((item, index) -&gt; item contains payload.stateFrom))[0] == payload.stateFrom]'>
-				<set-variable doc:name="Set Variable 28" doc:id="9e0fbb93-9b3a-447a-bb4b-fbc931dbf310" variableName="days_left" value="28"/>
-			</when>
-			<otherwise >
-				<set-variable value="14" doc:name="Set Variable 14" doc:id="c3b80fac-bb4f-42fa-8590-dbd0a3cf39e8" variableName="days_left" />
-			</otherwise>
-		</choice>
-	</sub-flow>
-	<sub-flow name="assignHospital" doc:id="53c132ce-287a-43b5-b08f-40ba3e2b3d3c" >
-		<choice doc:name="Choice" doc:id="a1f44f43-7128-4896-a2ca-b81b1d248324" >
-			<when expression='#[payload.symptoms == "yes"]' >
-				<db:select doc:name="Select" doc:id="c3051ce6-528e-450a-aec8-a63462e0653c" config-ref="Database_Config" target="hospitals">
-					<db:sql><![CDATA[SELECT * FROM hospital]]></db:sql>
-				</db:select>
-				<ee:transform doc:name="Transform Message" doc:id="8b0619c7-a436-4370-a032-55c45f1cbc28">
-					<ee:message>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="hospitalName"><![CDATA[%dw 2.0
-output application/json
-
-var empty = (vars.hospitals map $ filter $.status=="empty")[0].name
-var slightly = (vars.hospitals map $ filter $.status=="slightly")[0].name
-var partially = (vars.hospitals map $ filter $.status=="partially")[0].name
-var almostFull = (vars.hospitals map $ filter $.status=="almostFull")[0].name
-
----
-
-if (isEmpty(empty))
-    if (isEmpty(slightly))
-       if (isEmpty(partially))
-             if(isEmpty(almostFull))
-             	null
-             else
-                 almostFull
-        else
-            partially
-    else
-        slightly
-else
-    empty]]></ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-				<try doc:name="Try" doc:id="3dc8304b-77c5-411c-b536-810c25a6e900" >
-					<validation:is-not-null doc:name="Is not null" doc:id="ddb9642d-5775-4986-a043-4fbabfbbf6fe" value="#[vars.hospitalName]" message="There is no available hospitals." />
-					<error-handler >
-						<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6726562e-3376-45c2-9e89-1a3e1c7b06a3" type="VALIDATION:NULL">
-							<set-payload value="#[error.description]" doc:name="Set Payload" doc:id="0bcf4ea8-a662-4bbf-bf2f-8ee810685cee" />
-						</on-error-propagate>
-					</error-handler>
-				</try>
-				<db:insert config-ref="Database_Config">
-    <db:sql><![CDATA[INSERT INTO persons (id, name, surname, citizenship, stateFrom, symptoms, days_left, id_hospital)
-VALUES (:id, :name, :surname, :citizenship, :stateFrom, :symptoms, :days_left, :id_hospital);
-
-    ]]></db:sql>
-			<db:input-parameters><![CDATA[#[output application/json
----
-{
-	"id": payload.id,
-	"name": payload.name,
-	"surname": payload.surname,
-	"citizenship": payload.citizenship,
-	"stateFrom": payload.stateFrom,
-	"symptoms": payload.symptoms,
-	"days_left": vars.days_left,
-	"id_hospital" : vars.hospitalName
-}]]]></db:input-parameters>
-
-</db:insert>
-				<flow-ref doc:name="manageHospital" doc:id="89d41bf0-3ebe-4148-84ad-a789a3417bd9" name="manageHospital" />
-			</when>
-			<otherwise>
-				<logger level="INFO" doc:name="Logger" doc:id="65b6f39a-a766-487f-a092-c7d48d69ccbd" message="User not inserted in hospital cause has no symptoms."/>
-			</otherwise>
-		</choice>
-	</sub-flow>
-	<sub-flow name="manageHospital" doc:id="879e198c-c4f8-4580-a7d2-98c544c90c77" >
-		<db:update doc:name="Update" doc:id="7faa4a8f-898d-4672-b10a-177fc61f785a" config-ref="Database_Config">
-			<db:sql ><![CDATA[UPDATE hospital
-SET status = :status, currentPatients= currentPatients+1
-WHERE name = :name;]]></db:sql>
-			<db:input-parameters ><![CDATA[#[output application/json
-var targetHospital = (vars.hospitals filter ((item, index) -> item.name == vars.hospitalName))[0]
-
----
-{
-	"status": if (targetHospital.status=="empty") "slightly" 
-		else if (targetHospital.status=="slightly") "partially" 
-		else if (targetHospital.status=="partially") "almostFull" 
-		else "full",
-	"name": vars.hospitalName,
-}]]]></db:input-parameters>
-		</db:update>
-	</sub-flow>
-	<flow name="getHospitals" doc:id="f4cb5e00-d294-48ed-b76c-7bb354fc63de" >
-		<db:select doc:name="Select" doc:id="3d2801da-5c38-46c9-a3c2-6ff60b29e2f2" config-ref="Database_Config" >
-			<db:sql ><![CDATA[SELECT * FROM hospital]]></db:sql>
-		</db:select>
-		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://colors.json", "application/json")]' doc:name="Set Variable" doc:id="972de3ed-b826-4511-a7fd-96c41e3b6375" variableName="colorsData"/>
-		<ee:transform doc:name="Transform Message" doc:id="d58497a2-9317-43fb-b9cb-efb7089b9a98" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
 output application/xml
 ---
 html: {
@@ -243,6 +184,264 @@ html: {
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<set-payload value="#[payload]" doc:name="Payload" doc:id="9891869b-6da6-43df-9842-ca57aa2cce6e" mimeType="text/html" />
+		<flow-ref doc:name="ConvertToHTML" doc:id="d9950602-922f-424c-8b20-20b8d7c67101" name="ConvertToHTML"/>
 	</flow>
+	<flow name="getHistory" doc:id="0c386436-749f-4c87-80af-e50b24ce08f4">
+		<db:select doc:name="Get History" doc:id="f421f315-757d-48af-81e9-2c2be1379342" config-ref="Database_Config" target="history">
+			<db:sql><![CDATA[SELECT * FROM history]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="e21aae95-0dd6-4c7e-8954-89af8c06d06e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+
+html: {
+	head: {
+		title: 'Corona API',
+		link @(href: "https://fonts.googleapis.com", rel: "preconnect"): "",
+		link @(href: "https://fonts.gstatic.com", rel: "preconnect"): "",
+		link @(href: "https://fonts.googleapis.com/css2?family=Open+Sans:wght@500;600;700&display=swap", rel: "stylesheet", asd: "text/css"): "",
+	},
+	body @(style: "display:flex; min-height:100vh; margin: auto; background-color: #1e1e1e; font-family : Open Sans"): {
+		div @(style: "display: flex; flex-direction: column; max-height:350px; gap:3rem; justify-content:center; width: 20%; border-bottom-right-radius: 20px; align-items:center; background-color: #D4DCFF; color: white; padding: 1rem"):{
+			h1 @(style: " font-weight: 700; padding: 1rem 2rem; font-size:40px; color:black; text-align: center; margin-bottom: 3rem; margin-block-start: 0em; margin-block-end: 0em;"): "HISTORY LIST",
+			div @(style: "display: flex; flex-direction:column; text-align:center; gap: 2rem; color: white"): {
+				a @(href:"http://localhost:8081/hospitals", style:"text-decoration:none; font-size: 18px; text-transform: uppercase; color:black"): "Go to hospitals",
+				a @(href:"http://localhost:8081/history", style:"text-decoration:none; font-size: 18px; text-transform: uppercase; color:black"): "Go to users",				
+			}
+		},
+		div @(style:"display:flex; flex-direction:column; gap: 4rem; justify-content:center; align-items:center; width:70%; margin:auto; margin-top:5rem"):{
+			div: vars.history map {
+				
+			}
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="ConvertToHTML" doc:id="a5c64dda-9942-45c8-8fae-5a9de0a215e3" name="ConvertToHTML" />
+	</flow>
+	<flow name="postUser" doc:id="7bbf4c0b-24b7-4967-8a83-5f90ed0c22cd" >
+		<choice doc:name="Choice" doc:id="6f16839e-e145-4cc6-8c6b-ec919e4cf694" >
+			<when expression='#[sizeOf((payload filterObject ((value, key, index) -&gt; &#10;    key ~= "id" or &#10;    key ~= "name" or &#10;    key ~= "surname" or &#10;    key ~= "citizenship" or &#10;    key ~= "stateFrom" or &#10;    key ~= "symptoms" or &#10;    key ~= "days_left" or &#10;    key ~= "id_hospital"&#10;))) == 8]'>
+				<db:select doc:name="Select" doc:id="482041be-c50b-4d6b-97fe-bfca42579092" config-ref="Database_Config" target="arrId">
+				<db:sql><![CDATA[select id from persons]]></db:sql>
+			</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="a835fd1d-7ba7-45e8-8fbb-a5e285cd7ece">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="duplicateID"><![CDATA[%dw 2.0
+output application/json
+---
+vars.arrId filter $.id == payload.id]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+				<validation:is-empty-collection doc:name="Is empty collection" doc:id="5440caca-276d-446a-9521-79a80b2725b8" values="#[vars.duplicateID]" message="Duplicate ID." />
+				<choice doc:name="Choice" doc:id="c585b764-9da7-4b24-bd19-44f10315ded0">
+			<when expression='#[payload.citizenship=="Serbia"]'>
+				<flow-ref doc:name="IsSerbian" doc:id="70211d49-10ce-4ae2-b758-107f3f9abee8" name="IsSerbian" />
+			</when>
+					<otherwise>
+				<set-payload value='#[output application/json&#10;---&#10;{&#10;	"error":"No ha sido añadido, no es ciudadano de Serbia"&#10;	&#10;}]' doc:name="Set Payload" doc:id="2adc963a-5bc7-408c-b72c-73c8c45f26f5" />
+			</otherwise>
+		</choice>
+				<flow-ref doc:name="assignHospital" doc:id="2c8e014b-48c7-4505-92ca-0e3247786aaf" name="assignHospital" />
+				<ee:transform doc:name="Transform Message" doc:id="4207fe49-514b-42f9-a8d6-c9056d80d013">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "User added"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+		</choice>
+		<error-handler ref="globalError_Handler" />
+	</flow>
+	<sub-flow name="IsSerbian" doc:id="b070b3d6-abd7-4551-a962-f2dc210369b6" >
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://Hotspots.json", "application/json")]' doc:name="Set Variable" doc:id="b061a35f-38c6-41cf-b764-c11501b086a2" variableName="fileData"/>
+		<choice doc:name="Choice" doc:id="6745bfac-ea8c-46ea-9d7d-1c0ecb4b8ad2" >
+			<when expression='#[(vars.fileData.hotspots filter ((item, index) -&gt; item contains payload.stateFrom))[0] == payload.stateFrom]'>
+				<set-variable doc:name="Set Variable 28" doc:id="9e0fbb93-9b3a-447a-bb4b-fbc931dbf310" variableName="days_left" value="28"/>
+			</when>
+			<otherwise >
+				<set-variable value="14" doc:name="Set Variable 14" doc:id="c3b80fac-bb4f-42fa-8590-dbd0a3cf39e8" variableName="days_left" />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="assignHospital" doc:id="53c132ce-287a-43b5-b08f-40ba3e2b3d3c" >
+		<choice doc:name="Choice" doc:id="a1f44f43-7128-4896-a2ca-b81b1d248324" >
+			<when expression='#[payload.symptoms == "yes"]' >
+				<try doc:name="Try" doc:id="c24f1786-1fd2-41fb-be73-c3d4751f4db4" >
+					<db:select doc:name="Select" doc:id="c3051ce6-528e-450a-aec8-a63462e0653c" config-ref="Database_Config" target="hospitals">
+					<db:sql><![CDATA[SELECT * FROM hospital]]></db:sql>
+				</db:select>
+					<ee:transform doc:name="Transform Message" doc:id="8b0619c7-a436-4370-a032-55c45f1cbc28">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="hospitalName"><![CDATA[%dw 2.0
+output application/json
+
+var empty = (vars.hospitals map $ filter $.status=="empty")[0].name
+var slightly = (vars.hospitals map $ filter $.status=="slightly")[0].name
+var partially = (vars.hospitals map $ filter $.status=="partially")[0].name
+var almostFull = (vars.hospitals map $ filter $.status=="almostFull")[0].name
+
+---
+
+if (isEmpty(empty))
+    if (isEmpty(slightly))
+       if (isEmpty(partially))
+             if(isEmpty(almostFull))
+             	null
+             else
+                 almostFull
+        else
+            partially
+    else
+        slightly
+else
+    empty]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+					<validation:is-not-null doc:name="Is not null" doc:id="ddb9642d-5775-4986-a043-4fbabfbbf6fe" value="#[vars.hospitalName]" message="There is no available hospitals." />
+					<error-handler>
+						<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1f71427d-0777-4a17-a587-04ce6f4368d0" type="VALIDATION:NULL" >
+							<set-payload value='#[output application/json&#10;---&#10;{&#10;	"message": "No available hospitals",&#10;	"httpStatus": 404&#10;}]' doc:name="Set Payload" doc:id="d2cde827-4b30-40f2-9f64-6a213837e0a6" />
+						</on-error-propagate>
+					</error-handler>
+				</try>
+				<db:insert config-ref="Database_Config" doc:name="insertUser">
+    <db:sql><![CDATA[INSERT INTO persons (id, name, surname, citizenship, stateFrom, symptoms, days_left, days_isolation, id_hospital)
+VALUES (:id, :name, :surname, :citizenship, :stateFrom, :symptoms, :days_left, :days_isolation, :id_hospital);]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	"id": payload.id,
+	"name": payload.name,
+	"surname": payload.surname,
+	"citizenship": payload.citizenship,
+	"stateFrom": payload.stateFrom,
+	"symptoms": payload.symptoms,
+	"days_left": vars.days_left,
+	"days_isolation": vars.days_left,
+	"id_hospital" : vars.hospitalName
+}]]]></db:input-parameters>
+
+</db:insert>
+				<db:update doc:name="updateHospital" doc:id="7faa4a8f-898d-4672-b10a-177fc61f785a" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE hospital
+SET status = :status, currentPatients= currentPatients+1
+WHERE name = :name;]]></db:sql>
+			<db:input-parameters><![CDATA[#[output application/json
+var targetHospital = (vars.hospitals filter ((item, index) -> item.name == vars.hospitalName))[0]
+
+---
+{
+	"status": if (targetHospital.status=="empty") "slightly" 
+		else if (targetHospital.status=="slightly") "partially" 
+		else if (targetHospital.status=="partially") "almostFull" 
+		else "full",
+	"name": vars.hospitalName,
+}]]]></db:input-parameters>
+		</db:update>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="65b6f39a-a766-487f-a092-c7d48d69ccbd" message="User not inserted in hospital cause has no symptoms."/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<flow name="sendingEmails" doc:id="9852b368-e78e-4f73-a313-a45dcb5f3742" >
+		<scheduler doc:name="Scheduler" doc:id="9de58d51-9b10-4dd8-8140-8fc6bc952bd9" >
+			<scheduling-strategy >
+				<cron expression="0 45 14 * * ? *" />
+			</scheduling-strategy>
+		</scheduler>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="dc01340a-f733-484b-b5be-1c2202602871" >
+			<route >
+				<db:select doc:name="Get Patients" doc:id="40d0b454-80a2-4a94-bc01-de2b2238fbce" config-ref="Database_Config" target="patients">
+			<db:sql><![CDATA[SELECT * FROM persons]]></db:sql>
+		</db:select>
+			</route>
+			<route >
+				<db:select doc:name="rowCountGet Number Of Hospitals" doc:id="b87008a5-43cb-4680-b66e-5abad620801c" config-ref="Database_Config" target="numHospitals" transactionalAction="NOT_SUPPORTED">
+					<db:sql><![CDATA[SELECT COUNT(*) from hospital]]></db:sql>
+				</db:select>
+			</route>
+		</scatter-gather>
+		<foreach doc:name="For Each" doc:id="f6e9f207-7e99-4114-ae71-928d4b051560" collection="#[vars.patients]">
+			<set-variable value="#[output application/json&#10;var arr = [payload.days_isolation, payload.days_left]&#10;---&#10;arr[0] as Number - arr[1] as Number]" doc:name="daysIsolated" doc:id="ad0005c1-cf08-4070-80a3-e6270f48afea" variableName="daysIsolated"/>
+			<ee:transform doc:name="Transform Message" doc:id="ffb1ce8b-16a9-4d4f-ad81-4052dfcc1b54" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="template" ><![CDATA[%dw 2.0
+output application/xml
+---
+
+html: {
+	h2: "Hi " ++ payload.name ++ "!, this is your Corona report:",
+	div @(style: ";padding: 1rem 2rem; display: flex; flex-direction:column; justify-content: center: gap:2rem; align-items:center"):{
+		
+		p @(style: "color:white;font-size:21px;background-color: #1e1e1e"): "Days in isolation: " ++ vars.daysIsolated as String,
+		p @(style: "color:white;font-size:21px;background-color: #1e1e1e"): "Days out of isolation: " ++ payload.days_left as String,
+		p @(style: "color:white;font-size:21px;background-color: #1e1e1e"): "Symptoms: " ++ payload.symptoms,
+		p @(style: "color:white;font-size:21px; text-decoration: none;background-color: #1e1e1e"): vars.numHospitals
+	},
+	h3: "You will receive another email tomorrow at the same time"
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<set-variable value="#[vars.template]" doc:name="Set Variable" doc:id="7bb300ba-43d3-42c9-9d2d-22642f813e68" variableName="templateEmail" mimeType="text/html"/>
+			<email:send doc:name="Send" doc:id="b3226cf9-8eea-4db8-9561-4bcadfaf9b09" config-ref="Email_SMTP" fromAddress="luisseijas998@gmail.com" subject='#[payload.name ++ " " ++ payload.surname ++" Corona Report"]'>
+				<email:to-addresses >
+					<email:to-address value="coronachallengemulesoft@gmail.com" />
+				</email:to-addresses>
+				<email:body contentType="text/html">
+					<email:content ><![CDATA[#[vars.templateEmail]]]></email:content>
+				</email:body>
+			</email:send>
+		</foreach>
+		<db:update doc:name="Subtract 1 day" doc:id="dffd5ca6-1c00-4845-9b6d-56212e7b4b6c" config-ref="Database_Config">
+			<db:sql ><![CDATA[UPDATE persons SET days_left = days_left - 1 WHERE days_left != 0]]></db:sql>
+		</db:update>
+		<db:select doc:name="Select" doc:id="f3559ad8-5b9f-4f7a-9abd-bc80a8277b43" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM persons where days_left=0]]></db:sql>
+		</db:select>
+		<choice doc:name="Choice" doc:id="462543e8-cf62-4225-b24b-32eea6696138" >
+			<when expression="#[sizeOf(payload)&gt;0]">
+				<foreach doc:name="For Each" doc:id="ed86a647-c124-4e61-b865-7505e5ae08bf" collection="#[payload]">
+					<db:insert doc:name="Insert" doc:id="a9414a8e-3b5a-485f-b2ad-b8d4e585b084" config-ref="Database_Config" target="keys">
+					<db:sql><![CDATA[INSERT INTO history (id, name, surname, citizenship, stateFrom, symptoms, days_left, id_hospital)
+VALUES (:id, :name, :surname, :citizenship, :stateFrom, :symptoms, :days_left, :id_hospital);]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	id: payload.id,
+	name: payload.name,
+	surname: payload.surname,
+	citizenship: payload.citizenship,
+	stateFrom: payload.stateFrom,
+	symptoms: payload.symptoms,
+	days_left: payload.days_left,
+	id_hospital: payload.id_hospital
+}]]]></db:input-parameters>
+				</db:insert>
+					<db:delete doc:name="Delete" doc:id="ca60dff9-f9d9-4247-8bfd-f4c8e4df1c8a" config-ref="Database_Config">
+						<db:sql ><![CDATA[DELETE FROM persons WHERE id= :id;]]></db:sql>
+						<db:input-parameters ><![CDATA[#[{
+	id: payload.id
+}]]]></db:input-parameters>
+					</db:delete>
+				</foreach>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="a0f091a2-a523-474a-8abd-946bd4d8cf6e" message="Go on"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<sub-flow name="ConvertToHTML" doc:id="31ffce8f-1692-4766-8b76-1eca7eb0c8fd" >
+		<set-payload value="#[payload]" doc:name="Payload" doc:id="9e602699-a4df-4a9f-9423-b102e339e245" mimeType="text/html" />
+	</sub-flow>
 </mule>
